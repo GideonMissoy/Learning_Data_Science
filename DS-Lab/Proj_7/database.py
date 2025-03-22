@@ -62,8 +62,9 @@ class MongoRepository:
 
         # Return DataFrame
         return df_nationality
+    
 
-    def get_ages():
+    def get_ages(self):
 
         """Gets applicants ages from database.
 
@@ -72,19 +73,45 @@ class MongoRepository:
         pd.Series
         """
         # Get ages from database
-        
+        result = self.collection.aggregate(
+            [
+                {
+                    '$project': {
+                        'years': {
+                                '$dateDiff': {
+                                    'startDate': '$birthday',
+                                    'endDate': '$$NOW',
+                                    'unit': 'year'
+                                }
+                        }
+                    }
+                    
+                }
+            ]
+        )
         # Load results into series
+        ages = pd.DataFrame(result)['years']
 
         # Return ages
-        pass
+        return ages
 
-    def __ed_sort():
+    def __ed_sort(self, counts):
 
         """Helper function for self.get_ed_value_counts."""
-        pass
+        degrees = [
+            "High School or Baccalaureate",
+            "Some College (1-3 years)",
+            "Bachelor's degree",
+            "Master's degree",
+            "Doctorate (e.g. PhD)",
+        ]
+        mapping = {k: v for v, k in enumerate(degrees)}
+        sort_order = [mapping[c] for c in counts]
+        return sort_order
+        
         
 
-    def get_ed_value_counts():
+    def get_ed_value_counts(self, normalize=False):
 
         """Gets value counts of applicant eduction levels.
 
@@ -99,15 +126,30 @@ class MongoRepository:
             W/ index sorted by education level
         """
         # Get degree value counts from database
-        
+        result = self.collection.aggregate(
+            [
+                {
+                    '$group': {
+                        '_id': '$highestDegreeEarned',
+                        'count': {'$count': {}}
+                    }
+                }
+            ]
+        )
         # Load result into Series
-        
+        education = (
+            pd.DataFrame(result)
+            .rename({'_id': 'highest_degree_earned'}, axis='columns')
+            .set_index('highest_degree_earned')
+            .squeeze()
+        )
         # Sort Series using `self.__ed_sort`
-
+        education.sort_index(key=self.__ed_sort, inplace=True)
         # Optional: Normalize Series
-        
+        if normalize:
+            education = (education / education.sum() * 100)
         # Return Series
-        pass
+        return education
 
     def get_no_quiz_per_day():
 

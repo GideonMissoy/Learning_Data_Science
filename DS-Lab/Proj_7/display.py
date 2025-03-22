@@ -5,7 +5,7 @@ from jupyter_dash import JupyterDash
 # Task 7.4.1
 app = JupyterDash(__name__)
 # Task 7.4.8
-gb = ...
+gb = GraphBuilder()
 # Task 7.4.13
 sb = ...
 
@@ -18,12 +18,14 @@ app.layout = html.Div(
             value='Nationality',
             id='demo-plots-dropdown'
         ),
-        html.div(id='demo-plots-display'),
+        html.Div(id='demo-plots-display'),
         html.H1('Experiment'),
+        html.H2('Choose your effect size'),
+        dcc.Slider(min=0.1, max=0.8, step=0.1, value=0.2, id='effect-size-slider'),
+        html.Div(id='effect-size-display'),
         html.H1('Results')
     ]
 )
-
 
 # Tasks 7.4.4, 7.4.8, 7.4.9, 7.4.10
 @app.callback(
@@ -46,6 +48,10 @@ def display_demo_graph(graph_name):
     """
     if graph_name == 'Nationality':
         fig = gb.build_nat_choropleth()
+    elif graph_name == 'Age':
+        fig = gb.build_age_hist()
+    elif graph_name == 'Education':
+        fig = gb.build_ed_bar()
     return dcc.Graph(figure=fig)
 
 

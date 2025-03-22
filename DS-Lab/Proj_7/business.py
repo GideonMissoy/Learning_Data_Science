@@ -14,7 +14,7 @@ from teaching_tools.ab_test.experiment import Experiment
 class GraphBuilder:
     """Methods for building Graphs."""
 
-    def __init__(self, repo=MongoRepository):
+    def __init__(self, repo=MongoRepository()):
 
         """init
 
@@ -48,7 +48,7 @@ class GraphBuilder:
 
         return fig
 
-    def build_age_hist():
+    def build_age_hist(self):
 
         """Create age histogram.
 
@@ -57,13 +57,20 @@ class GraphBuilder:
         Figure
         """
         # Get ages from respository
-
+        df_ages = self.repo.get_ages()
+        
         # Create Figure
+        fig = px.histogram(
+            x=df_ages,
+            nbins=20,
+            title='DS Applicants: Distribution of Ages'
+        )
+        fig.update_layout(xaxis_title='Age', yaxis_title='Frequency [counts]')
         
         # Return Figure
-        pass
+        return fig
 
-    def build_ed_bar():
+    def build_ed_bar(self):
 
         """Creates education level bar chart.
 
@@ -72,11 +79,21 @@ class GraphBuilder:
         Figure
         """
         # Get education level value counts from repo
-
+        education = self.repo.get_ed_value_counts()
         # Create Figure
-        
+        fig = px.bar(
+            x=education,
+            y=education.index,
+            orientation='h',
+            title='DS Applicants Education Levels'
+        )
+
+        # Add axis labels
+        fig.update_layout(xaxis_title='Frequency [counts]', yaxis_title='Highest Degree Earned')
+
         # Return Figure
-        pass
+        return fig
+
 
     def build_contingency_bar():
 
@@ -98,7 +115,7 @@ class GraphBuilder:
 class StatsBuilder:
     """Methods for statistical analysis."""
 
-    def __init__():
+    def __init__(self, repo=MongoRepository()):
 
         """init
 
@@ -107,9 +124,9 @@ class StatsBuilder:
         repo : MongoRepository, optional
             Data source, by default MongoRepository()
         """
-        pass
+        self.repo = repo
 
-    def calculate_n_obs():
+    def calculate_n_obs(self, effect_size):
 
         """Calculate the number of observations needed to detect effect size.
 
@@ -124,9 +141,11 @@ class StatsBuilder:
             Total number of observations needed, across two experimental groups.
         """
         # Calculate group size, w/ alpha=0.05 and power=0.8
-        
+        chi_square_power = GofChisquarePower()
+        group_size = math.ceil(
+            chi_square_power.solve_power(effect_size=effect_size, alpha=0.05, power=0.8))
         # Return number of observations (group size * 2)
-        pass
+        return group_size * 2
 
     def calculate_cdf_pct():
 
